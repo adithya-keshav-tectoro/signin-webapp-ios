@@ -1,0 +1,8 @@
+build-builder:
+  script:
+    #   - git submodule update --init
+    - docker build -t signin-webapp:latest . --force-rm
+    - docker tag signin-webapp:latest registry.digitalocean.com/tectoro/signin-webapp:$CI_COMMIT_TAG
+    - docker push registry.digitalocean.com/tectoro/signin-webapp:$CI_COMMIT_TAG
+  only:
+    - tags

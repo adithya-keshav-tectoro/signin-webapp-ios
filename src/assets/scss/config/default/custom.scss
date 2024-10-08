@@ -1,0 +1,79 @@
+/*
+Template Name: EMM
+Author: Themesbrand
+Website: https://themesbrand.com/
+Contact: support@themesbrand.com
+File: Custom Css File
+*/
+
+.word-ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+}
+
+.scrollWidth-thin {
+    scrollbar-width: thin;
+}
+
+.custom-tooltip {
+    z-index: 100000 !important;
+    width: max-content !important;
+    max-width: 400px;
+    letter-spacing: normal;
+    word-break: normal;
+    word-spacing: normal;
+    white-space: normal;
+    line-break: auto;
+    word-wrap: break-word;
+    // background-color: #6d7584 !important;
+}
+
+.overflow-x-auto {
+    overflow-x: auto;
+}
+
+.overflow-x-hidden {
+    overflow-x: hidden;
+}
+
+.overflow-y-auto {
+    overflow-y: auto;
+}
+
+.loader-main {
+    background: rgba(225, 221, 221, 0.2);
+    width: calc(100% - 51px);
+    height: 100%;
+    position: absolute;
+    z-index: 999;
+    top: 0;
+}
+
+.loader-box {
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 999;
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px #00000029 !important;
+}
+
+.spinner-style {
+    width: 50px !important;
+    height: 50px !important;
+}
+
+.loading-style {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding: 5px 15px;
+    color: #333;
+    font-weight: bold;
+}

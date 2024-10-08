@@ -1,0 +1,87 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true,
+        "jest": true
+    },
+    "extends": [
+        "react-app",
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:react/recommended",
+        "plugin:react-hooks/recommended",
+        "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module",
+        "ecmaFeatures": { "jsx": true, "tsx": true }
+    },
+    "settings": {
+        "react": { "version": "^18.2.0" }
+    },
+    "globals": {
+        "$": true,
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "plugins": ["react", "@typescript-eslint", "eslint-plugin-no-inline-styles"],
+    "rules": {
+        "react/no-unescaped-entities": 0,
+        "react/react-in-jsx-scope": "off",
+        "react/prop-types": "off",
+        "no-unused-vars": "off",
+        "no-extra-boolean-cast": 0,
+        "no-inline-styles/no-inline-styles": 2,
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"],
+        "no-console": 2,
+        "camelcase": [2, { "properties": "never" }],
+        "multiline-comment-style": "warn",
+        "no-duplicate-imports": "warn",
+        "no-shadow": [1],
+        "max-nested-callbacks": ["error", 2],
+        "max-depth": ["error", 2],
+        "max-lines": ["error", 2000],
+        "no-trailing-spaces": ["error"],
+        "one-var-declaration-per-line": ["error", "always"],
+        "eqeqeq": "error",
+        "no-useless-escape": 0,
+        "no-constant-condition": ["warn", { "checkLoops": false }],
+        "require-jsdoc": [
+            "error",
+            {
+                "require": {
+                    "FunctionDeclaration": false,
+                    "MethodDefinition": false,
+                    "ClassDeclaration": false,
+                    "ArrowFunctionExpression": false,
+                    "FunctionExpression": false
+                }
+            }
+        ],
+        "spaced-comment": [
+            "error",
+            "always",
+            {
+                "line": {
+                    "markers": ["/"],
+                    "exceptions": ["-", "+"]
+                },
+                "block": {
+                    "markers": ["!"],
+                    "exceptions": ["*"],
+                    "balanced": true
+                }
+            }
+        ],
+        "no-empty": ["error", { "allowEmptyCatch": true }],
+        "react/jsx-uses-react": "error",
+        "react/jsx-uses-vars": "error",
+        "@typescript-eslint/explicit-module-boundary-types": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+    }
+}

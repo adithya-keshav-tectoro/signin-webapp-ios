@@ -1,0 +1,41 @@
+/*
+Template Name: EMM
+Author: Themesbrand
+Version: 4.1.0
+Website: https://themesbrand.com/
+Contact: support@themesbrand.com
+File: Main Css File
+*/
+
+//Fonts
+@import '../../fonts/fonts';
+
+//Core files
+@import './node_modules/bootstrap/scss/functions';
+@import './node_modules/bootstrap/scss/variables';
+@import 'variables';
+@import 'variables-custom';
+@import 'variables-dark';
+@import './node_modules/bootstrap/scss/mixins';
+
+// Structure
+@import '../../structure/topbar';
+@import '../../structure/page-head';
+@import '../../structure/footer';
+@import '../../structure/vertical';
+@import '../../structure/horizontal';
+@import '../../structure/two-column';
+@import '../../structure/layouts';
+
+// Components
+@import '../../components/avatar';
+
+// Bootstrap components
+@import '../../components/root';
+@import '../../components/reboot';
+@import '../../components/form-control';
+
+// Pages
+@import '../../pages/authentication';
+@import '../../pages/errors';
+@import '../../pages/coming-soon';
