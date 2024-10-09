@@ -7,7 +7,7 @@ export const initialState = {
     loading: false,
     isUserLogout: false,
     errorMsg: false, // for error,
-    baseUrl: 'https://portal.mdmdev.tectoro.com'
+    baseUrl: 'https://aware-unduly-badger.ngrok-free.app'
 };
 
 const loginSlice = createSlice({

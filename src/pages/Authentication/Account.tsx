@@ -20,23 +20,26 @@ const Account = () => {
     const baseUrl = getBaseUrl();
     const [loading, setLoading] = useState(false);
     const [loadingConfig, setLoadingConfig] = useState(false);
-    const [showPin, setShowPin] = useState(false);
+    const [showPin, setShowPin] = useState(true);
+    const [configObj, setConfigObj] = useState<any>({});
     const navigate = useNavigate();
 
     const fieldsArray: any = [
         { id: 'digit1-input', value: 'digitOne', index: 0 },
         { id: 'digit2-input', value: 'digitTwo', index: 1 },
         { id: 'digit3-input', value: 'digitThree', index: 2 },
-        { id: 'digit4-input', value: 'digitFour', index: 3 }
+        { id: 'digit4-input', value: 'digitFour', index: 3 },
+        { id: 'digit5-input', value: 'digitFive', index: 4 },
+        { id: 'digit6-input', value: 'digitSix', index: 5 }
     ];
 
     useEffect(() => {
         localStorage.clear();
         const urlParams = new URLSearchParams(window.location.search);
         const idPath = urlParams.get('id');
-        const baseUrlPath = urlParams.get('source');
+        const baseUrlPath = urlParams.get('source') ? urlParams.get('source') : baseUrl;
 
-        if (idPath && baseUrlPath) {
+        if (idPath) {
             getConfig(idPath, baseUrlPath);
             dispatch(setBaseUrl(baseUrlPath));
             setAxiosBaseUrl(baseUrlPath);
@@ -49,8 +52,8 @@ const Account = () => {
         api.get(baseUrlPath + url.CONFIG + idPath)
             .then((resp: any) => {
                 if (resp.status.toLowerCase() === 'success') {
-                    if (resp.data?.config && resp.data.config.pin && resp.data.config.pin !== '') {
-                        setShowPin(true);
+                    if (resp.data) {
+                        setConfigObj(resp.data);
                     }
                 } else {
                     toast.error('Failed to load Config');
@@ -66,7 +69,7 @@ const Account = () => {
 
     const validation: any = useFormik({
         enableReinitialize: true,
-        initialValues: { account: '', digitOne: '', digitTwo: '', digitThree: '', digitFour: '' },
+        initialValues: { account: '', digitOne: '', digitTwo: '', digitThree: '', digitFour: '', digitFive: '', digitSix: '' },
         validationSchema: !showPin
             ? Yup.object({
                   account: Yup.string().required('Please Enter Your Account ID.')
@@ -80,17 +83,15 @@ const Account = () => {
 
     const onPinSubmit = (values: any) => {
         setLoading(true);
-        const urlParams = new URLSearchParams(window.location.search);
-        const idPath = urlParams.get('id');
-        const params = {
-            id: idPath,
-            pin: `${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}`
-        };
-        api.create(baseUrl + url.VALIDATE_PIN, params)
+        api.get(
+            baseUrl +
+                url.VALIDATE_PIN +
+                `${configObj?.tenant}/${configObj?.policycode}?auth_type=${configObj.type}&value=${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`
+        )
             .then((resp: any) => {
-                if (resp.status.toLowerCase() === 'success') {
-                    dispatch(loginUser({}, navigate));
-                }
+                // if (resp.status.toLowerCase() === 'success') {
+                //     dispatch(loginUser({}, navigate));
+                // }
             })
             .finally(() => {
                 setLoading(false);
@@ -130,7 +131,9 @@ const Account = () => {
             digitOne: values[0] ? values[0] : '',
             digitTwo: values[1] ? values[1] : '',
             digitThree: values[2] ? values[2] : '',
-            digitFour: values[3] ? values[3] : ''
+            digitFour: values[3] ? values[3] : '',
+            digitFive: values[4] ? values[4] : '',
+            digitSix: values[5] ? values[5] : ''
         });
         document.getElementById(`digit${values.length}-input`)?.focus();
     };
@@ -248,7 +251,9 @@ const Account = () => {
                                                                     validation.values?.digitOne === '' ||
                                                                     validation.values?.digitTwo === '' ||
                                                                     validation.values?.digitThree === '' ||
-                                                                    validation.values?.digitFour === ''
+                                                                    validation.values?.digitFour === '' ||
+                                                                    validation.values?.digitFive === '' ||
+                                                                    validation.values?.digitSix === ''
                                                                 }
                                                             >
                                                                 <span className="d-flex align-items-center justify-content-center">
