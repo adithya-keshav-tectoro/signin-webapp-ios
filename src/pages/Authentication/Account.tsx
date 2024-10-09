@@ -86,7 +86,7 @@ const Account = () => {
         api.get(
             baseUrl +
                 url.VALIDATE_PIN +
-                `${configObj?.tenant}/${configObj?.policycode}?auth_type=${configObj.type}&value=${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`
+                `${configObj?.tenant}/${configObj?.policycode}?type=${configObj.type}&value=${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`
         )
             .then((resp: any) => {
                 // if (resp.status.toLowerCase() === 'success') {
