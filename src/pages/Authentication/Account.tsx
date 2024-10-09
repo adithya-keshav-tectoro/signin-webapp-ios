@@ -93,6 +93,7 @@ const Account = () => {
                 //     dispatch(loginUser({}, navigate));
                 // }
             })
+            .catch((_err) => toast.error(JSON.stringify(_err)))
             .finally(() => {
                 setLoading(false);
             });
