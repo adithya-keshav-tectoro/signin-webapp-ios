@@ -232,6 +232,7 @@ const Account = () => {
                                                                             key={index}
                                                                             onKeyUp={(e) => moveToNext(e, index + 2, field)}
                                                                             type="text"
+                                                                            inputMode="numeric"
                                                                             maxLength={1}
                                                                             className={'form-control mx-2 text-center'}
                                                                             id={field.id}
