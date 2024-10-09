@@ -44,8 +44,7 @@ const Account = () => {
             getConfig(idPath, baseUrlPath);
             dispatch(setBaseUrl(baseUrlPath));
             setAxiosBaseUrl(baseUrlPath);
-        }
-        // else toast.error('Failed to load Config');
+        } else toast.error('Failed to load Config');
     }, []);
 
     const getConfig = (idPath: any, baseUrlPath: any) => {
@@ -83,21 +82,25 @@ const Account = () => {
     });
 
     const onPinSubmit = (values: any) => {
-        setLoading(true);
-        api.get(
-            baseUrl +
-                url.VALIDATE_PIN +
-                `${configObj?.tenant}/${configObj?.policycode}?type=${configObj.type}&value=${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`
-        )
-            .then((resp: any) => {
-                // if (resp.status.toLowerCase() === 'success') {
-                //     dispatch(loginUser({}, navigate));
-                // }
-            })
-            .catch((_err) => toast.error(JSON.stringify(_err)))
-            .finally(() => {
-                setLoading(false);
-            });
+        const urlParams = new URLSearchParams(window.location.search);
+        const idPath = urlParams.get('id');
+        if (idPath) {
+            setLoading(true);
+            api.get(
+                baseUrl +
+                    url.VALIDATE_PIN +
+                    `${configObj?.tenant}/${configObj?.policycode}?type=${configObj.type}&value=${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`
+            )
+                .then((resp: any) => {
+                    // if (resp.status.toLowerCase() === 'success') {
+                    //     dispatch(loginUser({}, navigate));
+                    // }
+                })
+                .catch((_err) => toast.error(JSON.stringify(_err)))
+                .finally(() => {
+                    setLoading(false);
+                });
+        } else toast.error('Failed to load Config');
     };
 
     const onVerify = (values: any) => {
