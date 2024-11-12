@@ -53,7 +53,7 @@ const Account = () => {
         api.get(baseUrlPath + url.CONFIG + idPath)
             .then((resp: any) => {
                 if (resp.status.toLowerCase() === 'success') {
-                    if (resp.data?.authconfig && resp.data.authconfig.pin && resp.data.authconfig.pin !== '') {
+                    if (resp.data?.authtype === 'STATIC_PIN') {
                         setShowPin(true);
                     }
                 } else {

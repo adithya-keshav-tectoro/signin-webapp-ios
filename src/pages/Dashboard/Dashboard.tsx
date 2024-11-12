@@ -33,7 +33,7 @@ const Dashboard = () => {
         const idPath = urlParams.get('id');
 
         if (idPath) {
-            api.get(baseUrl + url.GET_TOKEN + `url?username=${user.username ? user.username : ''}`)
+            api.get(baseUrl + url.GET_TOKEN + `/${idPath}/url?username=${user.username ? user.username : ''}`)
                 .then((resp: any) => {
                     if (resp.status.toLowerCase() === 'success') {
                         setDynamicToken(resp.data);
