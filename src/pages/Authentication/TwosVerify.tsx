@@ -76,7 +76,7 @@ const TwosVerify = () => {
                 otp: `${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`,
                 username: authObj?.username,
                 tenant: accountId,
-                app: 'portal'
+                app: 'enroll'
             };
             if (routeParam === 'resetpassword') {
                 params.password = values.newPassword;
@@ -183,6 +183,19 @@ const TwosVerify = () => {
         document.getElementById(`digit${values.length}-input`)?.focus();
     };
 
+    const clearOTP = () => {
+        validation.setValues({
+            ...validation.values,
+            digitOne: '',
+            digitTwo: '',
+            digitThree: '',
+            digitFour: '',
+            digitFive: '',
+            digitSix: ''
+        });
+        document.getElementById('digit1-input')?.focus();
+    };
+
     const handleKeyDown = (e: any) => {
         // console.log(e);
     };
@@ -241,6 +254,16 @@ const TwosVerify = () => {
                                                                     }}
                                                                     value={validation.values[field.value] || ''}
                                                                 />
+                                                                {index === 5 && (
+                                                                    <div
+                                                                        className="d-flex align-items-center mt-3 cursor-pointer"
+                                                                        onClick={clearOTP}
+                                                                    >
+                                                                        <span className="text-decoration-underline text-primary ps-2">
+                                                                            Clear
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         );
                                                     })}

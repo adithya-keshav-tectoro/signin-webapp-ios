@@ -15,28 +15,25 @@ const Dashboard = () => {
     const [show, setShow] = useState(false);
     const [idError, setIdError] = useState<any>('');
     const [dynamicToken, setDynamicToken] = useState('');
+    const [fetchingData, setFetchingData] = useState(true);
 
     const user = LoggedInUser();
 
     const navigateToBrowser = () => {
         const a = document.createElement('a');
-        a.href = `https://enterprise.google.com/android/enroll/?et=${dynamicToken}`;
+        a.href = `${dynamicToken}`;
         // a.target = "_blank";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     };
     async function fetchData() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const provisioningInfoPath = urlParams.get('provisioningInfo');
+        const queryString = localStorage.getItem('queryParams') || '';
+        const urlParams = new URLSearchParams(queryString);
         const idPath = urlParams.get('id');
 
-        if (provisioningInfoPath && provisioningInfoPath?.split('/')?.length > 1) {
-            api.get(
-                baseUrl +
-                    url.GET_TOKEN +
-                    `?id=${idPath}&provisionInfo=${provisioningInfoPath?.split('/')[1]}&userName=${user.username ? user.username : ''}`
-            )
+        if (idPath) {
+            api.get(baseUrl + url.GET_TOKEN + `url?username=${user.username ? user.username : ''}`)
                 .then((resp: any) => {
                     if (resp.status.toLowerCase() === 'success') {
                         setDynamicToken(resp.data);
@@ -48,15 +45,17 @@ const Dashboard = () => {
                 .catch((error) => {
                     setShow(true);
                     setIdError(error);
-                });
+                })
+                .finally(() => setFetchingData(false));
         } else {
             setShow(true);
-            setIdError('provisionInfo Error');
+            setIdError('Failed to load Config');
+            setFetchingData(false);
         }
     }
 
     useEffect(() => {
-        // fetchData();
+        fetchData();
     }, []);
 
     return (
@@ -66,12 +65,18 @@ const Dashboard = () => {
                     <BreadCrumb title="Dashboard" pageTitle="Dashboard" backLink="" />
                     <div className="pt-3" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                         <h3>Welcome</h3>
-                        {/* {!idError && (
-                            <div className=" justify-content-center pt-2">
-                                <button onClick={navigateToBrowser}>Click here to navigate</button>
-                            </div>
+                        {fetchingData ? (
+                            <div className="pt-2"> Loading ... </div>
+                        ) : (
+                            <>
+                                {!idError && (
+                                    <div className="justify-content-center pt-2">
+                                        {dynamicToken && <button onClick={navigateToBrowser}>Click here</button>}
+                                    </div>
+                                )}
+                                {show && <div className="pt-3">Error: {idError ? JSON.stringify(idError) : ''}</div>}
+                            </>
                         )}
-                        {show && <div className="pt-3">Error: {idError ? JSON.stringify(idError) : ''}</div>} */}
                         {/* <div>Host:{JSON.stringify(window.location.host)}</div>
                         <div>Params: {JSON.stringify(window.location.search)}</div>
                         <div>Token: {dynamicToken ? JSON.stringify(dynamicToken) : JSON.stringify(idError)} </div> */}

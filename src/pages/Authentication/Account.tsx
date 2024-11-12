@@ -1,4 +1,3 @@
-/* eslint-disable multiline-comment-style */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Form, FormFeedback, Input, Label, Row } from 'reactstrap';
@@ -21,30 +20,32 @@ const Account = () => {
     const baseUrl = getBaseUrl();
     const [loading, setLoading] = useState(false);
     const [loadingConfig, setLoadingConfig] = useState(false);
-    const [showPin, setShowPin] = useState(true);
-    const [configObj, setConfigObj] = useState<any>({});
+    const [showPin, setShowPin] = useState(false);
+    const [failedToLoadConfig, setFailedToLoadConfig] = useState(false);
     const navigate = useNavigate();
 
     const fieldsArray: any = [
         { id: 'digit1-input', value: 'digitOne', index: 0 },
         { id: 'digit2-input', value: 'digitTwo', index: 1 },
         { id: 'digit3-input', value: 'digitThree', index: 2 },
-        { id: 'digit4-input', value: 'digitFour', index: 3 },
-        { id: 'digit5-input', value: 'digitFive', index: 4 },
-        { id: 'digit6-input', value: 'digitSix', index: 5 }
+        { id: 'digit4-input', value: 'digitFour', index: 3 }
     ];
 
     useEffect(() => {
         localStorage.clear();
         const urlParams = new URLSearchParams(window.location.search);
+        localStorage.setItem('queryParams', urlParams.toString());
         const idPath = urlParams.get('id');
-        const baseUrlPath = urlParams.get('source') ? urlParams.get('source') : baseUrl;
+        const baseUrlPath = urlParams.get('source');
 
-        if (idPath) {
+        if (idPath && baseUrlPath) {
             getConfig(idPath, baseUrlPath);
             dispatch(setBaseUrl(baseUrlPath));
             setAxiosBaseUrl(baseUrlPath);
-        } else toast.error('Failed to load Config');
+        } else {
+            setFailedToLoadConfig(true);
+            toast.error('Failed to load Config');
+        }
     }, []);
 
     const getConfig = (idPath: any, baseUrlPath: any) => {
@@ -52,14 +53,16 @@ const Account = () => {
         api.get(baseUrlPath + url.CONFIG + idPath)
             .then((resp: any) => {
                 if (resp.status.toLowerCase() === 'success') {
-                    if (resp.data) {
-                        setConfigObj(resp.data);
+                    if (resp.data?.authconfig && resp.data.authconfig.pin && resp.data.authconfig.pin !== '') {
+                        setShowPin(true);
                     }
                 } else {
+                    setFailedToLoadConfig(true);
                     toast.error('Failed to load Config');
                 }
             })
             .catch((err) => {
+                setFailedToLoadConfig(true);
                 toast.error('Failed to load Config');
             })
             .finally(() => {
@@ -69,7 +72,7 @@ const Account = () => {
 
     const validation: any = useFormik({
         enableReinitialize: true,
-        initialValues: { account: '', digitOne: '', digitTwo: '', digitThree: '', digitFour: '', digitFive: '', digitSix: '' },
+        initialValues: { account: '', digitOne: '', digitTwo: '', digitThree: '', digitFour: '' },
         validationSchema: !showPin
             ? Yup.object({
                   account: Yup.string().required('Please Enter Your Account ID.')
@@ -82,27 +85,22 @@ const Account = () => {
     });
 
     const onPinSubmit = (values: any) => {
+        setLoading(true);
         const urlParams = new URLSearchParams(window.location.search);
         const idPath = urlParams.get('id');
-        if (idPath) {
-            // setLoading(true);
-            // api.get(
-            //     baseUrl +
-            window.location.href =
-                baseUrl +
-                url.VALIDATE_PIN +
-                `${configObj?.tenant}/${configObj?.policycode}?type=${configObj.type}&value=${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}${values.digitFive}${values.digitSix}`;
-            // )
-            //     .then((resp: any) => {
-            //         // if (resp.status.toLowerCase() === 'success') {
-            //         //     dispatch(loginUser({}, navigate));
-            //         // }
-            //     })
-            //     .catch((_err) => toast.error(JSON.stringify(_err)))
-            //     .finally(() => {
-            //         setLoading(false);
-            //     });
-        } else toast.error('Failed to load Config');
+        const params = {
+            id: idPath,
+            pin: `${values.digitOne}${values.digitTwo}${values.digitThree}${values.digitFour}`
+        };
+        api.create(baseUrl + url.VALIDATE_PIN, params)
+            .then((resp: any) => {
+                if (resp.status.toLowerCase() === 'success') {
+                    dispatch(loginUser({}, navigate));
+                }
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     };
 
     const onVerify = (values: any) => {
@@ -138,11 +136,20 @@ const Account = () => {
             digitOne: values[0] ? values[0] : '',
             digitTwo: values[1] ? values[1] : '',
             digitThree: values[2] ? values[2] : '',
-            digitFour: values[3] ? values[3] : '',
-            digitFive: values[4] ? values[4] : '',
-            digitSix: values[5] ? values[5] : ''
+            digitFour: values[3] ? values[3] : ''
         });
         document.getElementById(`digit${values.length}-input`)?.focus();
+    };
+
+    const clearOTP = () => {
+        validation.setValues({
+            ...validation.values,
+            digitOne: '',
+            digitTwo: '',
+            digitThree: '',
+            digitFour: ''
+        });
+        document.getElementById('digit1-input')?.focus();
     };
 
     const handleOtpChange = (e: any, field: any) => {
@@ -185,95 +192,116 @@ const Account = () => {
                                                 <div className="d-flex align-items-center justify-content-center mb-1">
                                                     <p className={'fs-18 mb-0 fw-medium text-primary'}>Login Account</p>
                                                 </div>
-                                                {!showPin ? (
-                                                    <>
-                                                        <div className="mb-4">
-                                                            <Label className="form-label">Account ID</Label>
-                                                            <Input
-                                                                name="account"
-                                                                className={'form-control'}
-                                                                placeholder="Enter Account ID"
-                                                                type="text"
-                                                                onChange={handleAccountIDChange}
-                                                                onBlur={validation.handleBlur}
-                                                                value={validation.values.account || ''}
-                                                                invalid={
-                                                                    validation.touched.account && validation.errors.account ? true : false
-                                                                }
-                                                            />
-                                                            {validation.touched.account && validation.errors.account ? (
-                                                                <FormFeedback type="invalid">{validation.errors.account}</FormFeedback>
-                                                            ) : null}
-                                                        </div>
-                                                        <div className="mt-6">
-                                                            <button
-                                                                type="submit"
-                                                                className={'btn btn-success btn-load w-100'}
-                                                                disabled={validation.values.account === '' || loading}
-                                                            >
-                                                                <span className="d-flex align-items-center justify-content-center">
-                                                                    Verify Account
-                                                                    {loading && (
-                                                                        <span className="ms-2 spinner-border" role="status">
-                                                                            <span className="visually-hidden">Loading...</span>
-                                                                        </span>
-                                                                    )}
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                    </>
+                                                {failedToLoadConfig ? (
+                                                    <div className="d-flex align-items-center justify-content-center mt-3">
+                                                        <p className={'fs-14 mb-0 fw-medium '}>Failed to Load Config</p>
+                                                    </div>
                                                 ) : (
                                                     <>
-                                                        <div className="d-flex justify-content-center flex-row verifyOTP mt-4 mb-1 text-center">
-                                                            {fieldsArray?.map((field: any, index: any) => {
-                                                                return (
-                                                                    <div className="d-flex flex-column" key={index}>
-                                                                        <Input
-                                                                            key={index}
-                                                                            onKeyUp={(e) => moveToNext(e, index + 2, field)}
-                                                                            type="text"
-                                                                            inputMode="numeric"
-                                                                            maxLength={1}
-                                                                            className={'form-control mx-2 text-center'}
-                                                                            id={field.id}
-                                                                            autoFocus={index === 0}
-                                                                            name={field.value}
-                                                                            onPaste={handlePaste}
-                                                                            autoComplete="off"
-                                                                            onChange={(e) => {
-                                                                                if (handleOtpChange(e, field)) validation.handleChange(e);
-                                                                            }}
-                                                                            value={validation.values[field.value] || ''}
-                                                                        />
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                        <div className="mt-4">
-                                                            <Button
-                                                                color="success"
-                                                                type="submit"
-                                                                className="w-100"
-                                                                disabled={
-                                                                    loading ||
-                                                                    validation.values?.digitOne === '' ||
-                                                                    validation.values?.digitTwo === '' ||
-                                                                    validation.values?.digitThree === '' ||
-                                                                    validation.values?.digitFour === '' ||
-                                                                    validation.values?.digitFive === '' ||
-                                                                    validation.values?.digitSix === ''
-                                                                }
-                                                            >
-                                                                <span className="d-flex align-items-center justify-content-center">
-                                                                    Confirm
-                                                                    {loading && (
-                                                                        <span className="ms-2 spinner-border" role="status">
-                                                                            <span className="visually-hidden">Loading...</span>
+                                                        {!showPin ? (
+                                                            <>
+                                                                <div className="mb-4">
+                                                                    <Label className="form-label">Account ID</Label>
+                                                                    <Input
+                                                                        name="account"
+                                                                        className={'form-control'}
+                                                                        placeholder="Enter Account ID"
+                                                                        type="text"
+                                                                        onChange={handleAccountIDChange}
+                                                                        onBlur={validation.handleBlur}
+                                                                        value={validation.values.account || ''}
+                                                                        invalid={
+                                                                            validation.touched.account && validation.errors.account
+                                                                                ? true
+                                                                                : false
+                                                                        }
+                                                                    />
+                                                                    {validation.touched.account && validation.errors.account ? (
+                                                                        <FormFeedback type="invalid">
+                                                                            {validation.errors.account}
+                                                                        </FormFeedback>
+                                                                    ) : null}
+                                                                </div>
+                                                                <div className="mt-6">
+                                                                    <button
+                                                                        type="submit"
+                                                                        className={'btn btn-success btn-load w-100'}
+                                                                        disabled={validation.values.account === '' || loading}
+                                                                    >
+                                                                        <span className="d-flex align-items-center justify-content-center">
+                                                                            Verify Account
+                                                                            {loading && (
+                                                                                <span className="ms-2 spinner-border" role="status">
+                                                                                    <span className="visually-hidden">Loading...</span>
+                                                                                </span>
+                                                                            )}
                                                                         </span>
-                                                                    )}
-                                                                </span>
-                                                            </Button>
-                                                        </div>
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="d-flex justify-content-center flex-row verifyOTP mt-4 mb-1 text-center">
+                                                                    {fieldsArray?.map((field: any, index: any) => {
+                                                                        return (
+                                                                            <div className="d-flex flex-column" key={index}>
+                                                                                <Input
+                                                                                    key={index}
+                                                                                    onKeyUp={(e) => moveToNext(e, index + 2, field)}
+                                                                                    type="text"
+                                                                                    inputMode="numeric"
+                                                                                    maxLength={1}
+                                                                                    className={'form-control mx-2 text-center'}
+                                                                                    id={field.id}
+                                                                                    autoFocus={index === 0}
+                                                                                    name={field.value}
+                                                                                    onPaste={handlePaste}
+                                                                                    autoComplete="off"
+                                                                                    onChange={(e) => {
+                                                                                        if (handleOtpChange(e, field))
+                                                                                            validation.handleChange(e);
+                                                                                    }}
+                                                                                    value={validation.values[field.value] || ''}
+                                                                                />
+                                                                                {index === 3 && (
+                                                                                    <div
+                                                                                        className="d-flex align-items-center mt-3 cursor-pointer"
+                                                                                        onClick={clearOTP}
+                                                                                    >
+                                                                                        <span className="text-decoration-underline text-primary ps-2">
+                                                                                            Clear
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                <div className="mt-4">
+                                                                    <Button
+                                                                        color="success"
+                                                                        type="submit"
+                                                                        className="w-100"
+                                                                        disabled={
+                                                                            loading ||
+                                                                            validation.values?.digitOne === '' ||
+                                                                            validation.values?.digitTwo === '' ||
+                                                                            validation.values?.digitThree === '' ||
+                                                                            validation.values?.digitFour === ''
+                                                                        }
+                                                                    >
+                                                                        <span className="d-flex align-items-center justify-content-center">
+                                                                            Confirm
+                                                                            {loading && (
+                                                                                <span className="ms-2 spinner-border" role="status">
+                                                                                    <span className="visually-hidden">Loading...</span>
+                                                                                </span>
+                                                                            )}
+                                                                        </span>
+                                                                    </Button>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </>
                                                 )}
                                             </Form>

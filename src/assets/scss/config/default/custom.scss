@@ -77,3 +77,146 @@ File: Custom Css File
     color: #333;
     font-weight: bold;
 }
+
+
+/* width */
+::-webkit-scrollbar {
+    background-color: #f5f5f5;
+    width: 6px;
+    height: 6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background-color: #f5f5f5;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #d8d8d8;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+$sizes: 1000;
+
+// height
+@mixin height-classes {
+    @for $i from 1 through $sizes {
+        $height: $i * 1px;
+        $heightPer: $i * 1%;
+        $heightVh: $i * 1vh;
+
+        .height-#{$i} {
+            height: $height !important;
+        }
+
+        .heightPer-#{$i} {
+            height: $heightPer;
+        }
+
+        .heightVh-#{$i} {
+            height: $heightVh;
+        }
+    }
+}
+
+@include height-classes;
+
+// width
+@mixin width-classes {
+    @for $i from 1 through $sizes {
+        $width: $i * 1px;
+        $widthVW: $i * 1vw;
+        $widthPer: $i * 1%;
+
+        .width-#{$i} {
+            width: $width !important;
+        }
+
+        .right-#{$i} {
+            right: $width !important;
+        }
+
+        .padding-#{$i} {
+            padding: $width !important;
+        }
+
+        .padding-left-#{$i} {
+            padding-left: $width !important;
+        }
+
+        .padding-y-#{$i} {
+            padding-top: $width !important;
+            padding-bottom: $width !important;
+        }
+
+        .padding-x-#{$i} {
+            padding-left: $width !important;
+            padding-right: $width !important;
+        }
+
+        .padding-left-per-#{$i} {
+            padding-left: $widthPer !important;
+        }
+
+        .padding-top-#{$i} {
+            padding-top: $width !important;
+        }
+
+        .padding-bottom-#{$i} {
+            padding-bottom: $width !important;
+        }
+
+        .padding-right-#{$i} {
+            padding-right: $width !important;
+        }
+
+        .widthVW-#{$i} {
+            width: $widthVW;
+        }
+
+        .widthPer-#{$i} {
+            width: $widthPer !important;
+        }
+    }
+}
+
+@include width-classes;
+
+
+//border radius
+@mixin border-radius-classes {
+    @for $i from 1 through $sizes {
+        $border-radius: $i * 1px;
+        $border-radius-per: $i * 1%;
+
+        .br-per-#{$i} {
+            border-radius: $border-radius-per !important;
+        }
+
+        .br-#{$i} {
+            border-radius: $border-radius;
+        }
+
+        .border-radius-top-left-#{$i} {
+            border-top-left-radius: $border-radius !important;
+        }
+
+        .border-radius-top-right-#{$i} {
+            border-top-right-radius: $border-radius !important;
+        }
+
+        .border-radius-bottom-left-#{$i} {
+            border-bottom-left-radius: $border-radius !important;
+        }
+
+        .border-radius-bottom-right-#{$i} {
+            border-bottom-right-radius: $border-radius !important;
+        }
+    }
+}
+
+@include border-radius-classes;

@@ -21,27 +21,27 @@ axios.interceptors.response.use(
         /*
          * Any status codes that falls outside the range of 2xx cause this function to trigger
          */
-        if (!navigator.onLine) window.location.href = '#/auth-offline';
+        if (!navigator.onLine) window.location.href = '/#/auth-offline';
         let message;
         switch (error.response.status) {
             case 500:
                 // message = 'Internal Server Error';
-                window.location.href = '#/auth-500';
+                window.location.href = '/#/auth-500';
                 break;
             case 502:
                 message = 'Bad Gateway';
                 break;
             case 503:
                 message = 'Server maintenance';
-                window.location.href = '#/maintenance';
+                window.location.href = '/#/maintenance';
                 break;
             case 401:
                 // message = 'Invalid Credentials';
-                window.location.href = '#/auth-401';
+                window.location.href = '/#/auth-401';
                 break;
             case 404:
                 // message = 'Sorry! the data you are looking for could not be found';
-                window.location.href = '#/auth-404';
+                window.location.href = '/#/auth-404';
                 break;
             case 403:
                 return Promise.reject(error.response.status);

@@ -125,10 +125,8 @@ const getDateVal = (val: any) => {
     return val > 9 ? val : '0' + val;
 };
 
-const convertTextCase = (name: any, param: any) => {
-    let result;
-    if (param) result = name?.charAt(0)?.toUpperCase() + name?.substr(1)?.toLowerCase();
-    else result = name?.charAt(0)?.toUpperCase() + name?.substr(1);
+export const convertTextCase = (name: any) => {
+    const result = name?.charAt(0)?.toUpperCase() + name?.substr(1);
     return result;
 };
 
