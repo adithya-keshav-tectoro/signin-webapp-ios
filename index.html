@@ -1,0 +1,527 @@
+<!-- 
+    TODO: 
+      2. Add info to the cookies to and clear the cookie after submitting the form.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+        <!-- <script type="module" src="https://unpkg.com/@fluentui/web-components"></script> -->
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <script src="js/winJS.js"></script>
+
+        <title>Tectoro MDM Enrollment</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+
+            .spinner {
+                position: absolute;
+                left: 50%;
+                width: 48px;
+                height: 48px;
+                border: 4px solid #0b6d69;
+                border-top: 4px solid transparent;
+                border-radius: 50%;
+                animation: spin 1.2s linear infinite;
+            }
+
+            @keyframes spin {
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: #0000000d; 
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            .container {
+                margin: 0 auto;
+                border-radius: 10px;
+                text-align: center;
+            }
+    
+            .header {
+                background-color: #d3d3d3;
+                padding-bottom: 10px;
+                padding-top: 10px;
+            }
+    
+            input {
+                margin-bottom: 10px;
+                padding: 8px;
+                width: 100%;
+                width: 300px;
+            }
+    
+            button {
+                padding: 10px;
+                margin-bottom: 10px;
+                margin-right: 10px;
+                cursor: pointer;
+            }
+    
+            .error-container {
+                width: 300px;
+                margin: 0 auto;
+                text-align: center;
+                padding: 20px 40px 20px 20px;
+            }
+    
+            .error {
+                color: red;
+            }
+    
+            .header img {
+                margin-bottom: 15px;
+            }
+    
+            .header h4 {
+                font-size: large;
+                margin: 0px;
+            }
+    
+            .header p {
+                color: #028a8b;
+            }
+    
+            .border-none {
+                border: none !important;
+            }
+    
+        </style>
+    </head>
+    <div id="root"></div>
+    <script type="text/babel">
+        const Home = () => {
+            var enrollId = '';
+            function getURLParams() {
+                var params = {};
+                console.log("getURLParams: ", window.location.origin);
+                var query = window.location.search.substring(1);
+                var vars = query.split('&');
+                vars.forEach(function (v) {
+                    var pair = v.split('=');
+                    params[pair[0]] = decodeURIComponent(pair[1]);
+                });
+                return params;
+            }
+            const [urlParams, setUrlParams] = React.useState(getURLParams());
+            const [tenant, setTenant] = React.useState('TT');
+            const [userInfo, setUserInfo] = React.useState({});
+            const [authType, setAuthType] = React.useState();
+
+            function showSpinner() {
+                document.getElementById('loader').classList.remove('hidden');
+            }
+
+            function hideSpinner() {
+                document.getElementById('loader').classList.add('hidden');
+            }
+    
+            function fetchData() {
+                showSpinner();                
+                const domain = urlParams['domain'] ? urlParams['domain'] : 'tectoro.com';
+                const enhancedURL = `https://portal.mdmdev.tectoro.com/win/v1/whfed/${tenant}/${domain}/${urlParams['login_hint']}`;
+                WinJS.xhr({
+                    type: "GET",
+                    url: enhancedURL,
+                    headers: { "Content-Type": "application/json" },
+                }).done(function (resp) {
+                    hideSpinner();
+                    if (resp.status === 200) {
+                        const enrollConfig = JSON.parse(resp.response).data;
+                        console.log('Success', enrollConfig);
+                        setAuthType(enrollConfig.AuthType);
+                        switch (enrollConfig.AuthType) {
+                            case 'STATIC_PIN':
+                            case 'DYNAMIC_PIN':
+                                enrollId = enrollConfig.Id;
+                                document.getElementById('static-pin-container').style.display = 'block';
+                                // document.getElementById('login-çontainer').style.display = 'none';
+                                break;
+                            case 'NO_AUTH':
+                                enrollId = enrollConfig.Id;
+                                fedAuth();
+                                // document.getElementById('static-pin-container').style.display = 'none';
+                                // document.getElementById('login-container').style.display = 'none';
+                                break;
+                            case 'TECTORO_LOGIN':
+                                enrollId = enrollConfig.Id;
+                                document.getElementById('login-container').style.display = 'block';
+                                // document.getElementById('static-pin-container').style.display = 'none';
+                                break;
+                        }
+                        console.log("response", enrollConfig);
+                    } else {
+                        document.getElementById('message').style.display = 'block';
+                        document.getElementById('message').textContent = 'Please enter valid credentials';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                    const errorMessage = JSON.parse(error.response).error;
+                    console.log('Error', errorMessage);
+                    document.getElementById('message').style.display = 'block';
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('static-pin-container').style.display = 'none';
+                    document.getElementById('message').textContent = errorMessage;
+                });
+            }
+    
+            React.useEffect(() => {
+                console.log("window", urlParams);
+                document.getElementById('static-pin-container').style.display = 'none';
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('message').style.display = 'none';
+                const tenant = urlParams['tenant'] ? urlParams['tenant'] : 'TT';
+                setTenant(tenant);
+                if (urlParams['code'] && urlParams['state']) {
+                    const callbackParams = {
+                        code: urlParams['code'],
+                        state: urlParams['state']
+                    };
+                    oidcCallback(callbackParams);
+                } else {
+                    fetchData();
+                }
+            })
+    
+            function submitStaticPIN() {
+                console.log('submitStaticPIN', enrollId);
+                const pinNo = document.getElementById('staticPIN').value;
+                fedAuth(pinNo);
+            }
+    
+            function fedAuth(pinNo) {
+                showSpinner()
+                console.log('fedAuth', enrollId);
+                WinJS.xhr({
+                    type: "POST",
+                    url:  `https://portal.mdmdev.tectoro.com/win/v1/whfed/auth`,
+                    headers: { "Content-Type": "application/json" },
+                    data: JSON.stringify({
+                        authtype: authType,
+                        tenant: tenant,
+                        usermail: urlParams['login_hint'],
+                        pin: pinNo,
+                        id: enrollId
+                    })
+                }).done(function (resp) {
+                    hideSpinner();
+                    if (resp.status === 200) {
+                        const loginInfo = JSON.parse(resp.response);
+                        const code = loginInfo.data
+                        console.log("response", code);
+                        loginFeedback(code);
+                    } else {
+                        document.getElementById('message').style.display = 'block';
+                        document.getElementById('message').textContent = 'Please enter valid credentials';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                    const errorMessage = JSON.parse(error.response).error;
+                    console.log('Error', errorMessage);
+                    document.getElementById('message').style.display = 'block';
+                    document.getElementById('message').textContent = errorMessage;
+                });
+    
+            }
+            function loginFeedback(code) {
+                showSpinner();
+                WinJS.xhr({
+                    type: "POST",
+                    url: `https://portal.mdmdev.tectoro.com/idm/v1/auth/feedback/login`,
+                    headers: { "Content-Type": "application/json" },
+                    data: JSON.stringify({
+                        code,
+                        app: 'windows'
+                    })
+                }).done(function (resp) {
+                    hideSpinner();
+                    if (resp.status === 200) {
+                        const userDetails = JSON.parse(resp.response).data;
+                        console.log('User Info', userDetails);
+                        setUserInfo(userDetails);
+                        submitFormToEnroll(userDetails);
+                    } else {
+                        document.getElementById('message').textContent = 'Please enter valid credentials';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                    const errorMessage = JSON.parse(error.response).error;
+                    console.log('Error', errorMessage);
+                    document.getElementById('message').style.display = 'block';
+                    document.getElementById('message').textContent = errorMessage;
+                });
+            }
+            function submitFormToEnroll(userDetails) {
+                var a = document.createElement("a");
+                console.log("userDetails", userDetails);
+                const token = userDetails ? userDetails.token : urlParams['login_hint'];
+                const appru = urlParams['appru'] ? urlParams['appru'] : "ms-app://windows.immersivecontrolpanel"
+                const domain = urlParams['domain'] ? urlParams['domain'] : 'tectoro.com';
+                a.href = `https://portal.mdmdev.tectoro.com/win/v1/whauth/${tenant}/${domain}?appru=${appru}` + (token ? `&code=${encodeURIComponent(token)}` : "");
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+    
+            function submitLogin() {
+                showSpinner();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                WinJS.xhr({
+                    type: "POST",
+                    url: `https://portal.mdmdev.tectoro.com/idm/v1/auth/local/login`,
+                    headers: { "Content-Type": "application/json" },
+                    data: JSON.stringify({
+                        username: username,
+                        password: password,
+                        tenant: tenant
+                    })
+                }).done(function (response) {
+                    hideSpinner();
+                    if (response.status === 200) {
+                        document.getElementById('login-container').style.display = 'none';
+                        document.getElementById('static-pin-container').style.display = 'none';
+                        document.getElementById('next-screen').style.display = 'block';
+                    } else {
+                        document.getElementById('message').style.display = 'block';
+                        document.getElementById('message').textContent = 'Please enter valid credentials';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                    document.getElementById('message').style.display = 'block';
+                    document.getElementById('message').textContent = JSON.parse(error.response).error;
+                });
+            }
+            function submitOTP() {
+                const otp = document.getElementById('otp').value;
+                const username = document.getElementById('username').value;
+                showSpinner();
+                WinJS.xhr({
+                    type: "POST",
+                    url: `https://portal.mdmdev.tectoro.com/idm/v1/auth/local/tfa`,
+                    headers: { "Content-Type": "application/json" },
+                    data: JSON.stringify({
+                        otp: otp,
+                        tenant: tenant,
+                        username: username,
+                        device: "",
+                        app: "windows"
+                    })
+                }).done(function (response) {
+                    hideSpinner();
+                    if (response.status === 200) {
+                        console.log("response: ", JSON.parse(response.response));
+                        var user = JSON.parse(response.response).data;
+                        setUserInfo(user);
+                        document.getElementById('next-screen').style.display = 'none';
+                        document.getElementById('login-container').style.display = 'none';
+                        document.getElementById('success-screen').style.display = 'block';
+                        submitFormToEnroll(user);
+                    } else {
+                        document.getElementById('message').textContent = 'Invalid User';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                    document.getElementById('message').textContent = 'Error occurred';
+    
+                });
+            }
+            function cancelLogin() {
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('message').textContent = '';
+                document.getElementById('message').style.display = 'block';
+            }
+    
+            // Microsoft &Google account login
+            function onClickOidcLogin(mode) {
+                console.log("onClickOidcLogin", mode);
+                if (mode === 'ldap') {
+                    console.log(":::::::: Navigate to LDAP");
+                    document.getElementById('next-screen').style.display = 'none';
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('success-screen').style.display = 'none';
+                    document.getElementById('ldap-container').style.display = 'block';
+                } else {
+                    const domain = urlParams['domain'] ? urlParams['domain'] : 'tectoro.com';
+                    const params = {
+                        tenant: tenant,
+                        mode: mode,
+                        device: 'device',
+                        app: 'windows',
+                        callback: `https://portal.mdmdev.tectoro.com/win/assets/login.html`
+    
+                    };
+                    const queryString = Object.keys(params)
+                        .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
+                        .join('&');
+                    const signInURL = `https://portal.mdmdev.tectoro.com/idm/v1/auth/oidc/signin`;
+                    showSpinner();
+                    // Append the query string to the URL
+                    const fullUrl = `${signInURL}?${queryString}`;
+                    WinJS.xhr({
+                        type: "GET",
+                        url: fullUrl,
+                        headers: { "Content-Type": "application/json" },
+                    }).done(function (resp) {
+                        hideSpinner();
+                        if (resp.status === 200) {
+                            const respData = JSON.parse(resp.response).data;
+                            console.log("response: signINNNN", respData);
+                            window.location.replace(respData);
+                        } else {
+                            document.getElementById('message').textContent = 'Please enter valid credentials';
+                        }
+                    }, function (error) {
+                        hideSpinner();
+                    });
+                }
+            };
+    
+            function oidcCallback(params) {
+                showSpinner();
+                WinJS.xhr({
+                    type: "POST",
+                    url: `https://portal.mdmdev.tectoro.com/idm/v1/auth/oidc/callback`,
+                    data: JSON.stringify({
+                        state: params.state,
+                        code: params.code,
+                        callback: `https://portal.mdmdev.tectoro.com/win/assets/login.html`
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                }).done(function (resp) {
+                    hideSpinner();
+                    if (resp.status === 200) {
+                        const respData = JSON.parse(resp.response).data;
+                        console.log("Microsoft Login response", respData);
+                        submitFormToEnroll(respData);
+                    } else {
+                        document.getElementById('message').textContent = 'Please enter valid credentials';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                });
+            };
+    
+            function submitLDAPLogin() {
+                showSpinner();
+                const username = document.getElementById('ldapusername').value;
+                const password = document.getElementById('ldappassword').value;
+                WinJS.xhr({
+                    type: "POST",
+                    url: `https://portal.mdmdev.tectoro.com/idm/v1/auth/ldap/login`,
+                    data: JSON.stringify({
+                        tenant: tenant,
+                        username: username,
+                        password: password,
+                        app: 'windows'
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                }).done(function (resp) {
+                    hideSpinner();
+                    if (resp.status === 200) {
+                        const respData = JSON.parse(resp.response).data;
+                        console.log("LDAP Login response", respData);
+                        submitFormToEnroll(respData);
+                    } else {
+                        document.getElementById('message').textContent = 'Please enter valid credentials';
+                    }
+                }, function (error) {
+                    hideSpinner();
+                    document.getElementById('message').style.display = 'block';
+                    document.getElementById('message').textContent = JSON.parse(error.response).error;
+                })
+            };
+    
+            function cancelLDAP() {
+                document.getElementById('ldapusername').value = '';
+                document.getElementById('ldappassword').value = '';
+                document.getElementById('next-screen').style.display = 'none';
+                document.getElementById('login-container').style.display = 'block';
+                document.getElementById('success-screen').style.display = 'none';
+                document.getElementById('ldap-container').style.display = 'none';
+                document.getElementById('message').textContent = '';
+                document.getElementById('message').style.display = 'none';
+            };
+    
+            return (
+                <div>
+                    <div className="container">
+                        <div className="header">
+                            <img src="./img/logo-lg.png" alt="logo" height="40" />
+                            <h4>Enterprise Mobility Solution</h4>
+                            <p>Tectoro Consulting Pvt. Ltd</p>
+                        </div>
+                        <div>
+                            <div id="loader" className="overlay hidden">
+                                <div className="spinner"></div>
+                            </div>
+                            <div className="form-container" id="login-container">
+                                <h3>Login</h3>
+                                <input type="text" id="username" placeholder="Username" required></input><br />
+                                <input type="password" id="password" placeholder="Password" required></input><br />
+                                <button onClick={submitLogin}>Submit </button>
+                                <button onClick={cancelLogin}>Cancel</button>
+                                <div style={{ paddingTop: "24px" }}>
+                                    <button onClick={() => onClickOidcLogin('microsoft')}><img src="./img/microsoft.png" width={14} height={14}></img> <span>Microsoft</span></button>
+                                    <button onClick={() => onClickOidcLogin('ldap')}><img src="./img/ldap.png" width={14} height={14}></img> <span>LDAP</span></button>
+                                    <button onClick={() => onClickOidcLogin('google')}><img src="./img/google.png" width={14} height={14}></img> <span>Google</span></button>
+                                </div>
+                            </div>
+                            <div className="form-container" id="static-pin-container">
+                                <h3>Login with Static PIN</h3>
+                                <input type="number" id="staticPIN" placeholder="PIN" required></input><br />
+                                <button onClick={submitStaticPIN}>Submit PIN</button>
+                            </div>
+                            <div className="form-container" id="next-screen" style={{ display: 'none' }}>
+                                <h3>Enter OTP</h3>
+                                <input type="number" id="otp" placeholder="OTP" required></input><br />
+                                <button onClick={submitOTP}>Submit OTP</button>
+                            </div>
+                            <div className="form-container" id="success-screen" style={{ display: 'none' }}>
+                                <h3>Successfully Logged In!</h3>
+                            </div>
+                            <div className="form-container" id="ldap-container" style={{ display: 'none' }}>
+                                <h3>LDAP Login</h3>
+                                <input type="text" id="ldapusername" placeholder="Username" required></input><br />
+                                <input type="password" id="ldappassword" placeholder="Password" required></input><br />
+                                <button onClick={submitLDAPLogin}>Submit</button>
+                                <button onClick={cancelLDAP}>Cancel</button>
+                            </div>
+                            <div className="border-none" >
+                                <p className="error" id="message"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )
+    
+        }
+        ReactDOM.render(
+            <Home />, document.getElementById("root"));
+    </script>
+    
+    
+    </html>
